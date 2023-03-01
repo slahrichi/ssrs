@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(
 # Data args
 ###################
 parser.add_argument(
-    "--task", type=str, default=None, choices=['solar', 'building', 'crop_delineation'],
+    "--task", type=str, default=None, choices=['solar', 'building', 'crop_delineation', 'eurosat'],
     required=True,
     help="""The training task to attempt. Valid tasks
     include 'solar' [todo -- add the list of tasks as they are developed].""",
@@ -55,7 +55,7 @@ parser.add_argument(
     "--encoder",
     type=str,
     default="swav",
-    choices=["swav", "none", "imagenet", "swav-s1", "swav-s2", "swav-s3", "swav-s4", "swav-c1", 'swav-b1'],
+    #choices=["swav", "none", "imagenet", "swav-s1", "swav-s2", "swav-s3", "swav-s4", "swav-c1", 'swav-b1'],
     help="""The encoder to use. Valid
     options include 'swav', 'none', or 'imagenet'. If you specify, 'swav', then the encoder will
     load the pretrained model using the SwAV self-supervised method on ImageNet. 'none' loads

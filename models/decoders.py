@@ -1,14 +1,22 @@
 import logging
+from torch import nn
 from .base import unet
 
 
-def load(decoder_name, encoder):
+def load(decoder_name, encoder, num_classes=None, in_features=None):
     if decoder_name == "unet":
         return _load_unet(encoder)
-
+    elif decoder_name == "classifier":
+        return _load_classifier(num_classes, in_features)
     else:
         raise NotImplementedError
 
+def _load_classifier(num_classes, in_features):
+    model = nn.Sequential(
+        nn.Flatten(),
+        nn.Linear(in_features=in_features, out_featues=num_classes)
+    )
+    return model
 
 def _load_unet(encoder):
 

@@ -32,12 +32,13 @@ from models import encoders, decoders
 
 def main():
     #TODO - edit the task and base path
-    task = 'solar'
-    base_path = "./experiments/solar/data-comparison/"
+    task = 'building'
+    base_path = f"/scratch/saad/no-fine-tune/{task}/data-comparison/"
 
     data = ['64', '128', '256', '512', '1024']
     #TODO - edit the encoders
-    encoders = ['swav-b3']
+    #encoders = ['supervised', 'swav-imagenet', 'swav-climate+']
+    encoders = ['seco']
     trials = ['t1', 't2', 't3']
 
     results = {
@@ -74,7 +75,7 @@ def main():
     df = pd.DataFrame(results)
 
     #TODO - change the destination folder here.
-    df.to_csv('solar_results_swav-b3.csv')
+    df.to_csv(f'new_{task}_no_finetune_seco_results_swav-climate+.csv')
 
 
 def get_stats(model, dataloader):
@@ -190,7 +191,7 @@ def get_dataloader(encoder, task):
 
     if task == 'building':
 
-        if encoder in ['swav-b1', 'swav-b2', 'swav-b3']:
+        if encoder in ['swav-b1', 'swav-b2', 'swav-b3', "swav-climate+"]:
             print("Norm is data")
             norm = 'data'
         elif encoder == 'swav-a1':
@@ -207,6 +208,8 @@ def get_dataloader(encoder, task):
     elif task == "crop_delineation":
         if encoder == 'swav-a1':
             norm = 'all'
+        elif encoder == "swav-climate+":
+            norm = "data"
         else:
             norm = 'imagenet'
 

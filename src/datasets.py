@@ -12,6 +12,7 @@ from albumentations.pytorch import ToTensorV2
 from .tasks.solar import SolarPVDataset
 from .tasks.building import BuildingSegmentationDataset
 from .tasks.cropdelineation import CropDelineationDataset
+from .tasks.eurosat import EurosatDataset
 
 
 def load(task, normalization="data", augmentations=False, data_size=1024, evaluate=False, old=False, size="small"):
@@ -25,7 +26,10 @@ def load(task, normalization="data", augmentations=False, data_size=1024, evalua
     elif task == "crop_delineation":
         print("Loading crop delineation dataset.")
         return _load_cropdel_data(normalization, augmentations, evaluate, data_size)
-
+    elif task == "eurosat":
+        print("Loading Eurosat dataset.")
+        return _load_eurosat_data(normalization, augmentations, data_size)
+    
 def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     print(f"Data evaluate: {evaluate}")
     """
@@ -343,5 +347,61 @@ def _load_building_data(normalization, augmentations, data_size):
         val_imgs_path, val_imgs, val_masks_path,
         transform=test_transform
     )
+    # Return the training and test dataset
+    return train_dataset, test_dataset
+
+def _load_eurosat_data(normalization, augmentations, data_size):
+    if normalization == 'data':
+        print("Normalizing using the data.")
+        normalize = {
+            'mean': [0.344, 0.380, 0.408],
+            'std': [0.204, 0.137, 0.115]
+        }
+    elif normalization == 'imagenet':
+        print("Normalize using imagenet.")
+        normalize = {
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225]
+        }
+    else:
+        raise NotImplementedError("This normalization scheme isn't supported.")
+
+    if augmentations:
+        print("Adding augmentations...")
+        aug = A.Compose([
+            A.HorizontalFlip(),
+            A.VerticalFlip(),
+            A.Transpose(),
+            A.RandomRotate90(),
+        ])
+    tr_normalize = transforms.Normalize(
+        mean=normalize['mean'], std=normalize['std']
+    )
+    train_transform = transforms.Compose(
+        [transforms.ToTensor(),tr_normalize]
+    )
+    
+    # Load the training dataset
+    logging.debug("Creating the training dataset.")
+    if augmentations:
+        train_dataset = EurosatDataset(image_path="/home/sl636/seasonal-contrast/2750",
+                                        path="/scratch/saad/eurosat_data/", 
+                                        size=data_size, 
+                                        split="train", 
+                                        transform=train_transform, 
+                                        augmentations=aug)
+    else:
+        train_dataset = EurosatDataset(image_path="/home/sl636/seasonal-contrast/2750",
+                                        path="/scratch/saad/eurosat_data/", 
+                                        size=data_size, 
+                                        split="train", 
+                                        transform=train_transform)
+    # Load the test dataset
+    logging.debug("Creating the test dataset.")
+    test_dataset = EurosatDataset(image_path="/home/sl636/seasonal-contrast/2750",
+                                        path="/scratch/saad/eurosat_data/", 
+                                        size=data_size, 
+                                        split="test", 
+                                        transform=train_transform, augmentations=aug)
     # Return the training and test dataset
     return train_dataset, test_dataset

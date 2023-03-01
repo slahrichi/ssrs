@@ -2,7 +2,10 @@ import logging
 
 import torch
 from torchvision.models import resnet50 as r50
+from copy import deepcopy
 
+import re
+from collections import OrderedDict
 from .base import resnet
 
 
@@ -16,34 +19,68 @@ def load(encoder_name):
     elif encoder_name == "imagenet":
         print("Loading supervised ResNet model.")
         return _load_imagenet()
-    elif encoder_name == "swav-b3":
-        print("Loading swav-b3.")
-        return _load_swav_pretrained('./models/swav/swav-b3.pt')
-    elif encoder_name == "swav-s3":
-        print("Loading swav-solar-3 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s3.pt')
-    elif encoder_name == "swav-s7":
-        print("Loading swav-solar-7 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s7.pt')
-    elif encoder_name == "swav-s2":
-        print("Loading swav-solar-2 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s2.pt')
-    elif encoder_name == "swav-s1":
-        print("Loading swav-solar-1 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s1.pt')
-    elif encoder_name == "swav-c1":
-        print("Loading swav-crop-1 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-c1.pt')
-    elif encoder_name == "swav-c2":
-        print("Loading swav-crop-2 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-c2.pt')
-    elif encoder_name == "swav-a1":
-        print("Loading swav-all-1 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-a1.pt')
+    elif encoder_name == "swav-climate+":
+        print("Loading swav-climate+ pretrained weights")
+        return _load_swav_pretrained("/home/sl636/swav/experiments/indep/swav/climate+/swav-climate+.pt")
+    elif encoder_name == "seco":
+        return _load_seco("/home/sl636/seasonal-contrast/checkpoints/seco_resnet50_1m.ckpt")
+    elif encoder_name.startswith("swav_climate+_ep"):
+        n = encoder_name[len("swav_climate+_ep"):]
+        if n in ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90"]:
+            print(f"Loading swav-climate+_ep{n} pretrained weights")
+            return _load_swav_pretrained("/home/sl636/ssrs/models/swav/ckp-{n}.pt")
+        else:
+            print("Couldn't find encoder: ", encoder_name)
+            return
+
+        # elif encoder_name == "swav-b3":
+    #     print("Loading swav-b3.")
+    #     return _load_swav_pretrained('./models/swav/swav-b3.pt')
+    # elif encoder_name == "swav-s3":
+    #     print("Loading swav-solar-3 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s3.pt')
+    # elif encoder_name == "swav-s7":
+    #     print("Loading swav-solar-7 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s7.pt')
+    # elif encoder_name == "swav-s2":
+    #     print("Loading swav-solar-2 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s2.pt')
+    # elif encoder_name == "swav-s1":
+    #     print("Loading swav-solar-1 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s1.pt')
+    # elif encoder_name == "swav-c1":
+    #     print("Loading swav-crop-1 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c1.pt')
+    # elif encoder_name == "swav-c2":
+    #     print("Loading swav-crop-2 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c2.pt')
+    # elif encoder_name == "swav-a1":
+    #     print("Loading swav-all-1 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-a1.pt')
     else:
         logging.error(f"Encoder {encoder_name} not implemented.")
         raise NotImplementedError
 
+
+def _load_seco(model_path):
+    checkpoint = torch.load(model_path)
+    checkpoint_dict =  checkpoint["state_dict"]
+    new_state_dict = OrderedDict()
+    for key in list(checkpoint_dict.keys()):
+        if key.startswith("encoder_q"):
+            new_key = re.sub("encoder_q.","",key)
+            new_key = re.sub("^0(?=\.weight)","conv1",new_key)
+            new_key = re.sub("^1(?=\.[a-z_]*)","bn1",new_key)
+            new_key  = re.sub("^4(?=\.\d\.(conv|bn|downsample))","layer1",new_key )
+            new_key  = re.sub("^5(?=\.\d\.(conv|bn|downsample))","layer2",new_key )
+            new_key  = re.sub("^6(?=\.\d\.(conv|bn|downsample))","layer3",new_key )
+            new_key  = re.sub("^7(?=\.\d\.(conv|bn|downsample))","layer4",new_key )
+            new_state_dict[new_key] = checkpoint_dict[key] 
+
+    model = resnet.resnet50(inter_features=True)
+    model.load_state_dict(new_state_dict)
+    
+    return model
 
 def _load_swav_pretrained(model_path):
     """
@@ -85,29 +122,29 @@ def _load_swav():
     return _append_state_dict_to_resnet(model.state_dict())
 
 
-def _load_swav_b2():
-    """
-    This model loads the weights from the SwAV model that's trained
-    on the target data using its mean and standard deviation for the 
-    normalization scheme and places them onto this version of the 
-    ResNet model which allows the layers to be passed forward 
+# def _load_swav_b2():
+#     """
+#     This model loads the weights from the SwAV model that's trained
+#     on the target data using its mean and standard deviation for the 
+#     normalization scheme and places them onto this version of the 
+#     ResNet model which allows the layers to be passed forward 
 
-    """
-    model = torch.load("./swav-models/swav-b1.pt")
-    return _append_state_dict_to_resnet_2(model)
+#     """
+#     model = torch.load("./swav-models/swav-b1.pt")
+#     return _append_state_dict_to_resnet_2(model)
 
 
-def _append_state_dict_to_resnet_2(state_dict):
-    # Instantiate the version of ResNet that we want
-    # and load the weights on top of this model.
-    # For semantic segmentation, we need inter_features
-    # to be true.
-    #
-    # As we add more functionality, this piece of code
-    # will need to change.
-    base_model = resnet.resnet50(inter_features=True)
-    base_model.load_state_dict(state_dict)
-    return base_model
+# def _append_state_dict_to_resnet_2(state_dict):
+#     # Instantiate the version of ResNet that we want
+#     # and load the weights on top of this model.
+#     # For semantic segmentation, we need inter_features
+#     # to be true.
+#     #
+#     # As we add more functionality, this piece of code
+#     # will need to change.
+#     base_model = resnet.resnet50(inter_features=True)
+#     base_model.load_state_dict(state_dict)
+#     return base_model
 
 
 def _append_state_dict_to_resnet(state_dict):
