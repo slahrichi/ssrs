@@ -16,27 +16,61 @@ def load(encoder_name):
     elif encoder_name == "imagenet":
         print("Loading supervised ResNet model.")
         return _load_imagenet()
-    elif encoder_name == "swav-b1":
-        print("Loading swav-b1.")
-        return _load_swav_b1()
-    elif encoder_name == "swav-s3":
-        print("Loading swav-solar-3 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s3.pt')
-    elif encoder_name == "swav-s4":
-        print("Loading swav-solar-4 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s4.pt')
-    elif encoder_name == "swav-s2":
-        print("Loading swav-solar-2 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s2.pt')
-    elif encoder_name == "swav-s1":
-        print("Loading swav-solar-1 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-s1.pt')
-    elif encoder_name == "swav-c1":
-        print("Loading swav-crop-1 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-c1.pt')
-    elif encoder_name == "swav-c2":
-        print("Loading swav-crop-2 pretrained weights.")
-        return _load_swav_pretrained('./models/swav/swav-c2.pt')
+    elif encoder_name == "swav-climate+":
+        print("Loading swav-climate+ pretrained weights")
+        return _load_swav_pretrained("/home/sl636/swav-climate+.pt")
+    elif encoder_name.startswith("swav_climate+_ep"):
+        n = encoder_name[len("swav_climate+_ep"):]
+        if n in ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "99"]:
+            print(f"Loading swav-climate+_ep{n} pretrained weights")
+            return _load_swav_pretrained(f"/home/sl636/ssrs/models/swav/ckp-{n}.pt")
+        else:
+            print("Couldn't find encoder: ", encoder_name)
+            return
+    elif encoder_name.startswith("swav-climate+only-ep"):
+        n = encoder_name[len("swav-climate+only-ep"):]
+        if n in ["0","25", "50", "75", "100", "125", "150", "175", "200"]:
+            print(f"Loading swav-climate+only-{n} pretrained weights")
+            return _load_swav_pretrained(f"/home/sl636/ssrs/models/swav/climate+only/models/ckp-{n}.pt")
+        else:
+            print("Couldn't find encoder: ", encoder_name)
+            return
+    # elif encoder_name == "swav-b1-3000pr":
+    #     print("Loading swav-b1.")
+    #     return _load_swav_b1()
+    # elif encoder_name == "swav-b1-100pr":
+    #     print("Loading swav-b1-100pr.")
+    #     return _load_swav_pretrained('./models/swav/swav-b1-100pr.pt')
+    # elif encoder_name == "swav-b1-1000pr":
+    #     print("Loading swav-b1-1000pr.")
+    #     return _load_swav_pretrained('./models/swav/swav-b1-1000pr.pt')
+    # elif encoder_name == "swav-b1-5000pr":
+    #     print("Loading swav-b1-5000pr.")
+    #     return _load_swav_pretrained('./models/swav/swav-b1-5000pr.pt')
+    # elif encoder_name == "swav-s3":
+    #     print("Loading swav-solar-3 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s3.pt')
+    # elif encoder_name == "swav-s4":
+    #     print("Loading swav-solar-4 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s4.pt')
+    # elif encoder_name == "swav-s2":
+    #     print("Loading swav-solar-2 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s2.pt')
+    # elif encoder_name == "swav-s1":
+    #     print("Loading swav-solar-1 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-s1.pt')
+    # elif encoder_name == "swav-c1":
+    #     print("Loading swav-crop-1 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c1.pt')
+    # elif encoder_name == "swav-c2":
+    #     print("Loading swav-crop-2 pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c2.pt')
+    # elif encoder_name == "swav-c1-3000pr":
+    #     print("Loading swav-crop-3000pr pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c1-3000pr.pt')
+    # elif encoder_name == "swav-c2-3000pr":
+    #     print("Loading swav-crop-2-3000pr pretrained weights.")
+    #     return _load_swav_pretrained('./models/swav/swav-c2-3000pr.pt')
     else:
         logging.error(f"Encoder {encoder_name} not implemented.")
         raise NotImplementedError

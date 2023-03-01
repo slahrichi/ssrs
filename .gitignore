@@ -4,3 +4,5 @@
 experiments/*
 exp*.sh
 models/swav/
+graphs
+results

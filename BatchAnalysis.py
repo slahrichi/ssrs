@@ -5,6 +5,7 @@ them into a Pandas array for easy analysis."""
 import os
 import pandas as pd
 import numpy as np
+import argparse
 import copy
 
 import torch
@@ -16,10 +17,14 @@ from models import encoders, decoders
 
 
 def main():
-    base_path = "./experiments/crop_delineation/data-comparison/"
-
+    base_path = f"/scratch/saad/no-fine-tune/{args.task}/data-comparison/"
     data = ['64', '128', '256', '512', '1024']
-    encoders = ['supervised', 'swav-imagenet', 'swav-c1']
+    #encoders = [args.encoder]
+    encoders = ['supervised', 'swav-imagenet', 'swav-climate+']
+    for n in range(0,100,10):
+        encoders.append(f"swav_climate+_ep{n}")
+    encoders.append("swav_climate+_ep99")
+    #encoders = ['supervised', 'swav-imagenet', 'swav-c1']
     trials = ['t1', 't2', 't3']
 
     results = {
@@ -55,7 +60,7 @@ def main():
     # Save the dataframe
     df = pd.DataFrame(results)
 
-    df.to_csv('crop_delineation_batch_results.csv')
+    df.to_csv(args.output)
 
 
 def get_stats(model, dataloader):
@@ -159,15 +164,41 @@ class JaccardIndex():
 
 
 def get_dataloader(encoder):
-    if encoder == 'swav-c1':
+    if encoder in [f"swav_climate+_ep{n}" for n in range(0,100,10)]: ##['swav-c1', 'swav-b1-100pr', 'swav-b1-1000pr', 'swav-b1-3000pr', 'swav-b1-5000pr', 'swav-c1-3000pr', 'swav-c2-3000pr']:
+        print("Norm is data")
         norm = 'data'
     else:
         norm = 'imagenet'
 
-    _, test_dataset = datasets.load(task="crop_delineation", normalization=norm, old=False, size="64")
+    _, test_dataset = datasets.load(
+        task=args.task, normalization=norm, old=False, size="64")
 
     return test_dataset
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="This script handles batch analysis creation."
+    )
+    parser.add_argument(
+        '--task',
+        choices=['solar', 'building', 'crop_delineation'],
+        type=str,
+        help='The task of the experiment to analyze',
+        required=True
+    )
+
+    parser.add_argument(
+        '--encoder',
+        type=str,
+        help='The encoder to use for analysis',
+        required=False
+    )
+    parser.add_argument('--output',
+                        type=str,
+                        help='Name of output csv file',
+                        required=True)
+
+    args = parser.parse_args()
+
     main()

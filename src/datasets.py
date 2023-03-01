@@ -24,7 +24,8 @@ def load(task, normalization="data", augmentations=False, data_size=1024, evalua
         return _load_building_data(normalization, augmentations, data_size)
     elif task == "crop_delineation":
         print("Loading crop delineation dataset.")
-        return _load_cropdel_data(normalization, augmentations, evaluate, size)
+        return _load_cropdel_data(normalization, augmentations, evaluate, data_size)
+
 
 def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     print(f"Data evaluate: {evaluate}")
@@ -43,15 +44,17 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     else:
         print("Loading the complete training dataset.")
         train_files = list(file_map[file_map['split'] == 'train']['indices'])
-    
+
     val_files = list(file_map[file_map['split'] == 'val']['indices'])
     test_files = list(file_map[file_map['split'] == 'test']['indices'])
     if normalization == "data":
         # TODO -- calculate this
-        normalize = {"mean": [0.238, 0.297, 0.317], "std": [0.187, 0.123, 0.114]}
+        normalize = {"mean": [0.238, 0.297, 0.317],
+                     "std": [0.187, 0.123, 0.114]}
     else:
-        normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
-    
+        normalize = {"mean": [0.485, 0.456, 0.406],
+                     "std": [0.229, 0.224, 0.225]}
+
     # Add augmentations
     if augmentations:
         print("Adding augmentations...")
@@ -69,7 +72,8 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
             ]
         )
 
-    tr_normalize = transforms.Normalize(mean=normalize["mean"], std=normalize["std"])
+    tr_normalize = transforms.Normalize(
+        mean=normalize["mean"], std=normalize["std"])
 
     train_transform = transforms.Compose([transforms.ToTensor(), tr_normalize])
 
@@ -129,8 +133,8 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, size="no
             files = joblib.load("/scratch/zach/train_test_split_1024.joblib")
 
         # Make sure that the test set is the same for all trials.
-        files['test']['mask'] = val_files['test']['mask']
-        files['test']['empty'] = val_files['test']['empty']
+        #files['test']['mask'] = val_files['test']['mask']
+        #files['test']['empty'] = val_files['test']['empty']
     else:
         print("Loading full dataset")
         files = joblib.load("/scratch/zach/train_test_split.joblib")
@@ -159,14 +163,17 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, size="no
         print("Normalizing using the data.")
         if old:
             print("Using old normalization")
-            normalize = {'mean': [0.494, 0.491, 0.499], 'std': [0.142, 0.141, 0.135]}
+            normalize = {'mean': [0.494, 0.491, 0.499],
+                         'std': [0.142, 0.141, 0.135]}
         else:
             print("Using new normalization")
-            normalize = {"mean": [0.507, 0.513, 0.461], "std": [0.172, 0.133, 0.114]}
+            normalize = {"mean": [0.507, 0.513, 0.461],
+                         "std": [0.172, 0.133, 0.114]}
     elif normalization == "imagenet":
         print("Normalize using imagenet.")
         # This normalization scheme uses the means and weights for ImageNet.
-        normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
+        normalize = {"mean": [0.485, 0.456, 0.406],
+                     "std": [0.229, 0.224, 0.225]}
     else:
         raise NotImplementedError("This normalization scheme isn't supported.")
 
@@ -193,7 +200,8 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, size="no
             ]
         )
 
-    tr_normalize = transforms.Normalize(mean=normalize["mean"], std=normalize["std"])
+    tr_normalize = transforms.Normalize(
+        mean=normalize["mean"], std=normalize["std"])
 
     train_transform = transforms.Compose([transforms.ToTensor(), tr_normalize])
 
