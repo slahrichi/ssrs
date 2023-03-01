@@ -6,3 +6,5 @@ exp*.sh
 models/swav/
 results
 *.pt
+graphs
+results

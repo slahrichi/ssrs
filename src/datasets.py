@@ -26,10 +26,15 @@ def load(task, normalization="data", augmentations=False, data_size=1024, evalua
     elif task == "crop_delineation":
         print("Loading crop delineation dataset.")
         return _load_cropdel_data(normalization, augmentations, evaluate, data_size)
+<<<<<<< HEAD
     elif task == "eurosat":
         print("Loading Eurosat dataset.")
         return _load_eurosat_data(normalization, augmentations, data_size)
     
+=======
+
+
+>>>>>>> building
 def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     print(f"Data evaluate: {evaluate}")
     """
@@ -47,11 +52,12 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     else:
         print("Loading the complete training dataset.")
         train_files = list(file_map[file_map['split'] == 'train']['indices'])
-    
+
     val_files = list(file_map[file_map['split'] == 'val']['indices'])
     test_files = list(file_map[file_map['split'] == 'test']['indices'])
     if normalization == "data":
         # TODO -- calculate this
+<<<<<<< HEAD
         normalize = {"mean": [0.238, 0.297, 0.317], "std": [0.187, 0.123, 0.114]}
     elif normalization == 'all':
         print("Normalize using all remote sensing data.")
@@ -62,6 +68,14 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     elif normalization == 'imagenet':
         normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
     
+=======
+        normalize = {"mean": [0.238, 0.297, 0.317],
+                     "std": [0.187, 0.123, 0.114]}
+    else:
+        normalize = {"mean": [0.485, 0.456, 0.406],
+                     "std": [0.229, 0.224, 0.225]}
+
+>>>>>>> building
     # Add augmentations
     if augmentations:
         print("Adding augmentations...")
@@ -79,7 +93,8 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
             ]
         )
 
-    tr_normalize = transforms.Normalize(mean=normalize["mean"], std=normalize["std"])
+    tr_normalize = transforms.Normalize(
+        mean=normalize["mean"], std=normalize["std"])
 
     train_transform = transforms.Compose([transforms.ToTensor(), tr_normalize])
 
@@ -139,8 +154,8 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
             files = joblib.load("/scratch/zach/train_test_split_1024.joblib")
 
         # Make sure that the test set is the same for all trials.
-        files['test']['mask'] = val_files['test']['mask']
-        files['test']['empty'] = val_files['test']['empty']
+        #files['test']['mask'] = val_files['test']['mask']
+        #files['test']['empty'] = val_files['test']['empty']
     else:
         print("Loading full dataset")
         files = joblib.load("/scratch/zach/train_test_split.joblib")
@@ -169,13 +184,16 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
         print("Normalizing using the data.")
         if old:
             print("Using old normalization")
-            normalize = {'mean': [0.494, 0.491, 0.499], 'std': [0.142, 0.141, 0.135]}
+            normalize = {'mean': [0.494, 0.491, 0.499],
+                         'std': [0.142, 0.141, 0.135]}
         else:
             print("Using new normalization")
-            normalize = {"mean": [0.507, 0.513, 0.461], "std": [0.172, 0.133, 0.114]}
+            normalize = {"mean": [0.507, 0.513, 0.461],
+                         "std": [0.172, 0.133, 0.114]}
     elif normalization == "imagenet":
         print("Normalize using imagenet.")
         # This normalization scheme uses the means and weights for ImageNet.
+<<<<<<< HEAD
         normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
     elif normalization == 'all':
         print("Normalize using all remote sensing data.")
@@ -189,6 +207,10 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
             'mean': [0.406, 0.428, 0.394],
             'std': [0.201, 0.183, 0.176]
         }
+=======
+        normalize = {"mean": [0.485, 0.456, 0.406],
+                     "std": [0.229, 0.224, 0.225]}
+>>>>>>> building
     else:
         raise NotImplementedError("This normalization scheme isn't supported.")
 
@@ -215,7 +237,8 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
             ]
         )
 
-    tr_normalize = transforms.Normalize(mean=normalize["mean"], std=normalize["std"])
+    tr_normalize = transforms.Normalize(
+        mean=normalize["mean"], std=normalize["std"])
 
     train_transform = transforms.Compose([transforms.ToTensor(), tr_normalize])
 
@@ -250,12 +273,21 @@ def _load_building_data(normalization, augmentations, data_size):
     # train_masks_path = "/scratch/saad/1000_masks/"
     # val_imgs_path = "/scratch/saad/1000_val_images/"
     # val_masks_path = "/scratch/saad/1000_val_masks/"
+<<<<<<< HEAD
 
     train_imgs_path = f"/scratch/saad/{data_size}_images/"
     train_masks_path = f"/scratch/saad/{data_size}_masks/"
     val_imgs_path = f"/scratch/saad/{data_size}_val_images/"
     val_masks_path = f"/scratch/saad/{data_size}_val_masks/"
 
+=======
+
+    train_imgs_path = f"/scratch/saad/{data_size}_images/"
+    train_masks_path = f"/scratch/saad/{data_size}_masks/"
+    val_imgs_path = f"/scratch/saad/{data_size}_val_images/"
+    val_masks_path = f"/scratch/saad/{data_size}_val_masks/"
+
+>>>>>>> building
     train_imgs = natsorted(os.listdir(train_imgs_path))
     val_imgs = natsorted(os.listdir(val_imgs_path))
 

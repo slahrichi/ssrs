@@ -43,7 +43,8 @@ def main(args):
     create_train_val_curve(args.experiment_path)
 
     # You only need the test dataset output.
-    test_dataset = datasets.load(task=args.task, evaluate=True, normalization=args.normalization, old=False)
+    test_dataset = datasets.load(task=args.task, evaluate=True,
+                                 data_size=args.data_size, normalization=args.normalization, old=False)
 
     model = Model(args.experiment_path, args.device, args.model_type)
     model.to(args.device)
@@ -71,7 +72,7 @@ def main(args):
             if output.sum().item() == 0:
                 iou_results.append([file_name, contains_mask, 0])
                 continue
-            
+
         # Calculate IoU
         iou = calc_iou.update(output, mask)
         # pdb.set_trace()
@@ -88,7 +89,8 @@ def main(args):
     # generate_examples(model, test_dataset, args.task, args.dump_path)
     # Save iou as pandas array
     iou_results.append(['total', None, calc_iou.value])
-    df = pd.DataFrame(iou_results, columns=['file_name', 'contains_mask', 'iou'])
+    df = pd.DataFrame(iou_results, columns=[
+                      'file_name', 'contains_mask', 'iou'])
     df.to_csv(os.path.join(args.dump_path, 'iou.csv'))
 
     create_precision_recall_curve(preds, targets, args.dump_path)
@@ -99,7 +101,8 @@ def create_images_only(args):
     This function is meant as a helpful way to generate images when you
     find more interesting examples you want to look at.
     """
-    test_dataset = datasets.load(task=args.task, evaluate=True, normalization=args.normalization, old=False)
+    test_dataset = datasets.load(
+        task=args.task, evaluate=True, normalization=args.normalization, old=False)
     model = Model(args.experiment_path, args.device, args.model_type)
     model.to(args.device)
     generate_examples(model, test_dataset, args.task, args.dump_path)
@@ -108,7 +111,7 @@ def create_images_only(args):
 @torch.no_grad()
 def generate_examples(model, dataset, task, dump_path, threshold=0.5):
 
-    # These examples were found to have high standard deviation in the calculated 
+    # These examples were found to have high standard deviation in the calculated
     # IoU values, so I will use them as the examples to look at
     print(task)
     if task == 'solar':
@@ -231,7 +234,8 @@ class PrecisionRecall():
             output[output >= threshold] = 1
             # Calculate tp, fp, tn, fp and add it to
             # the scores.
-            self.scores[i]['tp'] += (output * target).sum().type(torch.int).item()
+            self.scores[i]['tp'] += (output *
+                                     target).sum().type(torch.int).item()
             self.scores[i]['fp'] += (
                 output * (all_ones - target)
             ).sum().type(torch.int).item()
@@ -244,7 +248,7 @@ class PrecisionRecall():
 
     def get_max_f1(self,):
         best_f1 = 0
-        eps = 1e-6 # Needed to prevent dividing by zero
+        eps = 1e-6  # Needed to prevent dividing by zero
         for score in self.scores:
             precision = (score['tp'] + eps) / (score['tp'] + score['fp'] + eps)
             recall = score['tp'] / (score['tp'] + score['fn'])
@@ -276,7 +280,7 @@ class Model:
         self.data_path = data_path
         self.model_type = model_type
         self.device = device
-        
+
         self.encoder = encoders.load('none')
         self.encoder.load_state_dict(torch.load(
             os.path.join(self.data_path, "enc_" + model_type + ".pt")
@@ -311,13 +315,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--task",
-        choices=["solar", "crop_delineation"],
+        choices=["solar", 'building', "crop_delineation"],
         type=str,
         help="The task of the experiment to analyze.",
         required=True
     )
 
-    parser.add_argument("--experiment_path", type=str, help="The path from which to load model results.", required=True)
+    parser.add_argument("--experiment_path", type=str,
+                        help="The path from which to load model results.", required=True)
     parser.add_argument(
         "--model_type",
         type=str,
@@ -333,6 +338,18 @@ if __name__ == "__main__":
         required=True
     )
     parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.5,
+        help="The threshold between classes for IoU loss.",
+    )
+    parser.add_argument(
+        "--data_size",
+        type=int,
+        default=1024,
+        help='The data size used for training'
+    )
     parser.add_argument(
         "--threshold",
         type=float,

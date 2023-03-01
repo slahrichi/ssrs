@@ -20,6 +20,7 @@ When in doubt, look for the #TODO flags
 import os
 import pandas as pd
 import numpy as np
+import argparse
 import copy
 
 import torch
@@ -31,14 +32,14 @@ from models import encoders, decoders
 
 
 def main():
-    #TODO - edit the task and base path
-    task = 'building'
-    base_path = f"/scratch/saad/no-fine-tune/{task}/data-comparison/"
-
+    base_path = f"/scratch/saad/no-fine-tune/{args.task}/data-comparison/"
     data = ['64', '128', '256', '512', '1024']
-    #TODO - edit the encoders
-    #encoders = ['supervised', 'swav-imagenet', 'swav-climate+']
-    encoders = ['seco']
+    #encoders = [args.encoder]
+    encoders = ['supervised', 'swav-imagenet', 'swav-climate+']
+    for n in range(0,100,10):
+        encoders.append(f"swav_climate+_ep{n}")
+    encoders.append("swav_climate+_ep99")
+    #encoders = ['supervised', 'swav-imagenet', 'swav-c1']
     trials = ['t1', 't2', 't3']
 
     results = {
@@ -55,7 +56,7 @@ def main():
             print(f"On dataset {ds}...")
             for enc in encoders:
                 print(f"On encoder {enc}...")
-                test_dataset = get_dataloader(enc, task)
+                test_dataset = get_dataloader(enc, args.task)
                 for trial in trials:
                     print(f"On trial {trial}...")
                     model = Model(base_path, ds, enc, trial)
@@ -74,8 +75,7 @@ def main():
     # Save the dataframe
     df = pd.DataFrame(results)
 
-    #TODO - change the destination folder here.
-    df.to_csv(f'new_{task}_no_finetune_seco_results_swav-climate+.csv')
+    df.to_csv(args.output)
 
 
 def get_stats(model, dataloader):
@@ -178,60 +178,43 @@ class JaccardIndex():
         return self.numerator / self.denominator
 
 
-def get_dataloader(encoder, task):
-    """
-    This function loads the validation dataset according
-    to the task.
+def get_dataloader(encoder):
+    if encoder in [f"swav_climate+_ep{n}" for n in range(0,100,10)]: 
+        print("Norm is data")
+        norm = 'data'
+    else:
+        norm = 'imagenet'
 
-    #TODO - you might need to ensure that the 'elif' statement
-    that catches the specific encoder you are testing is updated
-    so that the normalization scheme is updated.
-
-    """
-
-    if task == 'building':
-
-        if encoder in ['swav-b1', 'swav-b2', 'swav-b3', "swav-climate+"]:
-            print("Norm is data")
-            norm = 'data'
-        elif encoder == 'swav-a1':
-            norm = 'all'
-        elif encoder == 'swav-s7':
-            norm = 'solar'
-        else:
-            norm = 'imagenet'
-
-        _, test_dataset = datasets.load(task=task, normalization=norm, old=False, data_size="1024")
-
-        return test_dataset
-
-    elif task == "crop_delineation":
-        if encoder == 'swav-a1':
-            norm = 'all'
-        elif encoder == "swav-climate+":
-            norm = "data"
-        else:
-            norm = 'imagenet'
-
-        _, test_dataset = datasets.load(task=task, normalization=norm)
-
-        return test_dataset
+    _, test_dataset = datasets.load(
+        task=args.task, normalization=norm, old=False, size="1024")
     
-    elif task == "solar":
-        if encoder == 'swav-a1':
-            norm = 'all'
-        elif encoder == 'swav-s7':
-            norm = 'data'
-        elif encoder == 'swav-b3':
-            norm = 'building'
-        else:
-            norm = 'imagenet'
-
-        _, test_dataset = datasets.load(task=task, normalization=norm, data_size="1024")
-
-        return test_dataset
+    return test_dataset
 
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="This script handles batch analysis creation."
+    )
+    parser.add_argument(
+        '--task',
+        choices=['solar', 'building', 'crop_delineation'],
+        type=str,
+        help='The task of the experiment to analyze',
+        required=True
+    )
+
+    parser.add_argument(
+        '--encoder',
+        type=str,
+        help='The encoder to use for analysis',
+        required=False
+    )
+    parser.add_argument('--output',
+                        type=str,
+                        help='Name of output csv file',
+                        required=True)
+
+    args = parser.parse_args()
+
     main()
