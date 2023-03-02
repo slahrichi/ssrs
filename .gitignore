@@ -1,7 +1,6 @@
 *__pycache__
 *output.log
 *performance.csv
-experiments/*
 exp*.sh
 models/swav/
 results

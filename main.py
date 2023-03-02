@@ -2,12 +2,16 @@ import os
 import argparse
 import logging
 from itertools import chain
+import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
 
+
 from src import datasets, utils, metrics
 from models import encoders, decoders
+import wandb
+from torch.nn import functional as F
 
 # Create parser
 parser = argparse.ArgumentParser(
@@ -224,7 +228,50 @@ def main():
             best_test_loss = loss
     save_model(encoder, decoder, args.dump_path, "final.pt")
     logging.info(f"Code completed in {overall_timer.minutes_elapsed()}.")
+    
+    table_train = makewandb_segmentation_table_data(train_dataset,encoder,decoder,invTrans)
+    table_test = makewandb_segmentation_table_data(test_dataset,encoder,decoder,invTrans)
+    wandb.log({"train_prediction": table_train})
+    wandb.log({"test_prediction": table_test})
 
+
+
+
+def img_torch2np(X):
+    X_ = X.permute((1,2,0))
+    X_ = X_.numpy()
+    return X_
+
+def makewandb_segmentation_table_data(dataset, encoder,decoder,invTrans,cmap=None):
+    # add prediction to wandb table
+    # update *255 by rgb conversion
+    wandb_table_data= []
+    encoder.eval()
+    decoder.to(DEVICE)
+    for i in np.random.randint(0,10,10):
+        X0,y = dataset[i]
+        X = torch.unsqueeze(X0,0)
+        X = X.to(DEVICE)
+        X_ = img_torch2np(invTrans(X0))
+        if dataset.num_classes >1:
+            y_ = img_torch2np(y)*255/dataset.num_classes
+            pred = decoder(encoder(X))
+            pred_proba = F.softmax(pred,dim=1) # map predicted values to probabilities
+            pred_label = torch.argmax(pred_proba,dim=1)
+            pred_label = pred_label.detach().cpu().squeeze(0).numpy()*255/dataset.num_classes
+        else:
+            y_ = img_torch2np(y)
+            pred = decoder(encoder(X))
+            pred_prob = torch.sigmoid(pred)
+            pred_label= pred_prob.detach().cpu().squeeze(0)
+                
+        images_wandb = wandb.Image(X_)
+        mask_wandb =wandb.Image(y_)
+        predMask_wandb = wandb.Image(pred_label)
+        wandb_table_data.append([images_wandb,predMask_wandb,mask_wandb])
+    columns=["image", "prediction", "truth"]
+    wandb_table = wandb.Table(data=wandb_table_data, columns=columns)
+    return wandb_table
 
 def save_model(enc, dec, dump_path, name):
     torch.save(enc.state_dict(), os.path.join(dump_path, "enc_" + name))

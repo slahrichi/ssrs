@@ -26,15 +26,10 @@ def load(task, normalization="data", augmentations=False, data_size=1024, evalua
     elif task == "crop_delineation":
         print("Loading crop delineation dataset.")
         return _load_cropdel_data(normalization, augmentations, evaluate, data_size)
-<<<<<<< HEAD
     elif task == "eurosat":
         print("Loading Eurosat dataset.")
         return _load_eurosat_data(normalization, augmentations, data_size)
     
-=======
-
-
->>>>>>> building
 def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     print(f"Data evaluate: {evaluate}")
     """
@@ -57,10 +52,9 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     test_files = list(file_map[file_map['split'] == 'test']['indices'])
     if normalization == "data":
         # TODO -- calculate this
-<<<<<<< HEAD
         normalize = {"mean": [0.238, 0.297, 0.317], "std": [0.187, 0.123, 0.114]}
     elif normalization == 'all':
-        print("Normalize using all remote sensing data.")
+        print("Normalize using all remote sensing data (solar+building+cropdel).")
         normalize = {
             'mean': [0.431, 0.449, 0.411],
             'std': [0.120, 0.175, 0.164]
@@ -68,14 +62,6 @@ def _load_cropdel_data(normalization, augmentations, evaluate, size=None):
     elif normalization == 'imagenet':
         normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
     
-=======
-        normalize = {"mean": [0.238, 0.297, 0.317],
-                     "std": [0.187, 0.123, 0.114]}
-    else:
-        normalize = {"mean": [0.485, 0.456, 0.406],
-                     "std": [0.229, 0.224, 0.225]}
-
->>>>>>> building
     # Add augmentations
     if augmentations:
         print("Adding augmentations...")
@@ -193,7 +179,6 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
     elif normalization == "imagenet":
         print("Normalize using imagenet.")
         # This normalization scheme uses the means and weights for ImageNet.
-<<<<<<< HEAD
         normalize = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
     elif normalization == 'all':
         print("Normalize using all remote sensing data.")
@@ -207,10 +192,6 @@ def _load_solar_data(normalization, augmentations, evaluate, old=False, data_siz
             'mean': [0.406, 0.428, 0.394],
             'std': [0.201, 0.183, 0.176]
         }
-=======
-        normalize = {"mean": [0.485, 0.456, 0.406],
-                     "std": [0.229, 0.224, 0.225]}
->>>>>>> building
     else:
         raise NotImplementedError("This normalization scheme isn't supported.")
 
@@ -273,21 +254,12 @@ def _load_building_data(normalization, augmentations, data_size):
     # train_masks_path = "/scratch/saad/1000_masks/"
     # val_imgs_path = "/scratch/saad/1000_val_images/"
     # val_masks_path = "/scratch/saad/1000_val_masks/"
-<<<<<<< HEAD
 
     train_imgs_path = f"/scratch/saad/{data_size}_images/"
     train_masks_path = f"/scratch/saad/{data_size}_masks/"
     val_imgs_path = f"/scratch/saad/{data_size}_val_images/"
     val_masks_path = f"/scratch/saad/{data_size}_val_masks/"
 
-=======
-
-    train_imgs_path = f"/scratch/saad/{data_size}_images/"
-    train_masks_path = f"/scratch/saad/{data_size}_masks/"
-    val_imgs_path = f"/scratch/saad/{data_size}_val_images/"
-    val_masks_path = f"/scratch/saad/{data_size}_val_masks/"
-
->>>>>>> building
     train_imgs = natsorted(os.listdir(train_imgs_path))
     val_imgs = natsorted(os.listdir(val_imgs_path))
 
