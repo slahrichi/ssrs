@@ -6,12 +6,15 @@ import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
+from torch.nn import functional as F
+import torchvision.transforms as transforms
+from src.norms import Norm
 
 
 from src import datasets, utils, metrics
 from models import encoders, decoders
 import wandb
-from torch.nn import functional as F
+
 
 # Create parser
 parser = argparse.ArgumentParser(
@@ -153,8 +156,7 @@ def main():
     # Set up arguments
     global args
     args = parser.parse_args()
-    validate_args()
-
+    validate_args()  
     # Set up timer to time results
     overall_timer = utils.Timer()
 
@@ -209,6 +211,18 @@ def main():
     epoch_timer = utils.Timer()
     monitor = utils.PerformanceMonitor(args.dump_path)
     best_test_loss = float("inf")
+
+    config_dict = {"training size":args.data_size,
+                    "learning_rate":args.lr,
+                    "weight_decay": args.weight_decay ,
+                    "epochs": args.epochs,
+                    "batch_size":args.batch_size,
+                    "dataset": args.task,
+                    "encoder":args.encoder,
+                    "fine_tune_encoder": args.fine_tune_encoder}
+    wandb.init(project=args.task, config = config_dict)
+    wandb.watch(decoder, log="all")
+
     for epoch in range(args.epochs):
         print(f"Beginning epoch {epoch}")
         logging.info(f"Beginning epoch {epoch}...")
@@ -229,8 +243,15 @@ def main():
     save_model(encoder, decoder, args.dump_path, "final.pt")
     logging.info(f"Code completed in {overall_timer.minutes_elapsed()}.")
     
-    table_train = makewandb_segmentation_table_data(train_dataset,encoder,decoder,invTrans)
-    table_test = makewandb_segmentation_table_data(test_dataset,encoder,decoder,invTrans)
+    if args.task:
+        norm = Norm(args.task)
+        mean = norm.mean
+        std = norm.std
+    
+    invTrans = transforms.Compose([transforms.Normalize(mean = [-mean[i]/std[i] for i in range(3)],
+                                                        std = [1/std[i] for i in range(3) ])                           ])
+    table_train = makewandb_segmentation_table_data(train_data,encoder,decoder,invTrans)
+    table_test = makewandb_segmentation_table_data(test_data,encoder,decoder,invTrans)
     wandb.log({"train_prediction": table_train})
     wandb.log({"test_prediction": table_test})
 

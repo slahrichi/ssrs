@@ -23,7 +23,9 @@ def load(encoder_name):
         print("Loading swav-climate+ pretrained weights")
         return _load_swav_pretrained("/home/sl636/swav/experiments/indep/swav/climate+/swav-climate+.pt")
     elif encoder_name == "seco":
-        return _load_seco("/home/sl636/seasonal-contrast/checkpoints/seco_resnet50_1m.ckpt")
+        print("Loading SeCo-Resnet50")
+        return _load_seco_pt("/home/sl636/ssrs/models/seco_resnet50.pt")
+        #return _load_seco("/home/sl636/seasonal-contrast/checkpoints/seco_resnet50_1m.ckpt")
     elif encoder_name.startswith("swav_climate+_ep"):
         n = encoder_name[len("swav_climate+_ep"):]
         if n in ["0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "99"]:
@@ -44,6 +46,9 @@ def load(encoder_name):
         logging.error(f"Encoder {encoder_name} not implemented.")
         raise NotImplementedError
 
+def _load_seco_pt(model_path):
+    model = torch.load(model_path)
+    return _append_state_dict_to_resnet(model)
 
 def _load_seco(model_path):
     checkpoint = torch.load(model_path)

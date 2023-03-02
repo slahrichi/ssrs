@@ -7,3 +7,4 @@ results
 *.pt
 graphs
 results
+wandb
